@@ -81,11 +81,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium mb-1">List Price ($)</label>
-                            <input type="number" id="disc-a-list" class="input-field" placeholder="0.00" oninput="calculateDiscounts()">
+                            <input type="number" id="disc-a-list" class="input-field" placeholder="0.00" oninput="calculateAll()">
                         </div>
                         <div>
                             <label class="block text-xs font-medium mb-1">Discount %</label>
-                            <input type="number" id="disc-a-pct" class="input-field" placeholder="0" oninput="calculateDiscounts()">
+                            <input type="number" id="disc-a-pct" class="input-field" placeholder="0" oninput="calculateAll()">
                         </div>
                     </div>
                     <p class="text-lg font-bold text-green-700">Discounted Price: $<span id="disc-a-result">0.00</span></p>
@@ -95,11 +95,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-medium mb-1">List Price ($)</label>
-                            <input type="number" id="disc-b-list" class="input-field" placeholder="0.00" oninput="calculateDiscounts()">
+                            <input type="number" id="disc-b-list" class="input-field" placeholder="0.00" oninput="calculateAll()">
                         </div>
                         <div>
                             <label class="block text-xs font-medium mb-1">Final Price ($)</label>
-                            <input type="number" id="disc-b-final" class="input-field" placeholder="0.00" oninput="calculateDiscounts()">
+                            <input type="number" id="disc-b-final" class="input-field" placeholder="0.00" oninput="calculateAll()">
                         </div>
                     </div>
                     <p class="text-lg font-bold text-blue-700">Discount Percentage: <span id="disc-b-result">0</span>%</p>
@@ -125,7 +125,6 @@
             var tbody = document.getElementById(type + '-table-body');
             var row = document.createElement('tr');
             var isCurrent = (type === 'current');
-            
             row.className = isCurrent ? 'current-item' : 'new-item';
             
             var nameVal = mockData ? mockData.name : '';
@@ -140,7 +139,7 @@
                 '<td class="p-2 border"><input type="number" class="input-field price" value="' + priceVal + '" placeholder="0.00" oninput="calculateAll()"></td>' +
                 '<td class="p-2 border"><input type="date" class="input-field start" value="' + startVal + '" oninput="calculateAll()"></td>' +
                 '<td class="p-2 border"><input type="date" class="input-field end" value="' + endVal + '" oninput="calculateAll()"></td>' +
-                '<td class="p-2 border text-center"><button onclick="this.parentElement.parentElement.remove(); calculateAll();" class="text-red-500 font-bold hover:text-red-700">X</button></td>';
+                '<td class="p-2 border text-center"><button onclick="this.parentElement.parentElement.remove(); calculateAll();" class="text-red-500 font-bold">X</button></td>';
             
             tbody.appendChild(row);
             calculateAll();
@@ -151,6 +150,7 @@
             var now = new Date();
             now.setHours(0,0,0,0);
 
+            // 1. Current Subscriptions Remaining Value
             document.querySelectorAll('.current-item').forEach(function(row) {
                 var cost = parseFloat(row.querySelector('.price').value) || 0;
                 var start = new Date(row.querySelector('.start').value);
@@ -166,6 +166,7 @@
             });
             document.getElementById('total-remaining-value').innerText = totalRemainingValue.toFixed(2);
 
+            // 2. New Entitlements Pro-rated Cost
             var newTotalProrated = 0;
             document.querySelectorAll('.new-item').forEach(function(row) {
                 var annualPrice = parseFloat(row.querySelector('.price').value) || 0;
@@ -183,10 +184,8 @@
 
             var finalCharge = Math.max(0, newTotalProrated - totalRemainingValue);
             document.getElementById('total-prorated').innerText = finalCharge.toFixed(2);
-            calculateDiscounts();
-        }
 
-        function calculateDiscounts() {
+            // 3. Discount Calculator Calculations
             var daList = parseFloat(document.getElementById('disc-a-list').value) || 0;
             var daPct = parseFloat(document.getElementById('disc-a-pct').value) || 0;
             document.getElementById('disc-a-result').innerText = (daList * (1 - daPct/100)).toFixed(2);
@@ -216,7 +215,8 @@
 ";
             });
 
-            var newText = "CHANGES & NEW ENTITLEMENTS:
+            var newText = "
+CHANGES & NEW ENTITLEMENTS:
 ";
             document.querySelectorAll('.new-item').forEach(function(row) {
                 var name = row.querySelector('.name').value || "Unnamed Product";
@@ -232,14 +232,13 @@
 Please find the pricing updates below:
 
 " + 
-                               currentText + "
-" + 
-                               newText + "
-" + 
-                               "TOTAL ADDITIONAL PRO-RATED CHARGE: $" + total + "
+                               currentText + 
+                               newText + 
+                               "
+TOTAL ADDITIONAL PRO-RATED CHARGE: $" + total + 
+                               "
 
-" + 
-                               "Please let me know if you have any questions.
+Please let me know if you have any questions.
 
 Best regards,";
             
@@ -251,6 +250,7 @@ Best regards,";
             navigator.clipboard.writeText(text).then(function() { alert('Copied to clipboard!'); });
         }
 
+        // Dummy Data Initialization
         var oneYearFromNow = new Date();
         oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
         var endStr = oneYearFromNow.toISOString().split('T')[0];
@@ -262,7 +262,7 @@ Best regards,";
         document.getElementById('disc-a-pct').value = 25;
         document.getElementById('disc-b-list').value = 5000;
         document.getElementById('disc-b-final').value = 3750;
-        calculateDiscounts();
+        calculateAll();
     </script>
 </body>
 </html>
