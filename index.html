@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrowserStack Pricing Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card { background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .input-field { border: 1px solid #e2e8f0; border-radius: 4px; padding: 0.5rem; width: 100%; }
+        .btn-primary { background: #0052CC; color: white; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 600; }
+        .btn-danger { background: #DE350B; color: white; padding: 0.5rem 1rem; border-radius: 4px; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-slate-50 p-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <header class="text-center">
+            <h1 class="text-3xl font-bold text-slate-800">BrowserStack Pricing & Pro-ration Calculator</h1>
+        </header>
+
+        <!-- Current Subscription Section -->
+        <section class="card p-6">
+            <h2 class="text-xl font-semibold mb-4 text-slate-700">1. Current Subscription</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Entitlement Name</label>
+                    <input type="text" id="curr-name" class="input-field" placeholder="e.g. App Live">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Total Licenses</label>
+                    <input type="number" id="curr-licenses" class="input-field" placeholder="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Cost Paid ($)</label>
+                    <input type="number" id="curr-cost" class="input-field" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Start Date</label>
+                    <input type="date" id="curr-start" class="input-field">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">End Date</label>
+                    <input type="date" id="curr-end" class="input-field">
+                </div>
+            </div>
+        </section>
+
+        <!-- New Entitlements Table -->
+        <section class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-slate-700">2. New Entitlements & Pro-ration</h2>
+                <button onclick="addRow()" class="btn-primary">+ Add Product</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100">
+                            <th class="p-3 border">Product/Tier</th>
+                            <th class="p-3 border">Licenses</th>
+                            <th class="p-3 border">Annual List Price ($)</th>
+                            <th class="p-3 border">Start Date</th>
+                            <th class="p-3 border">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-table-body">
+                        <!-- Rows added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded">
+                <p class="text-lg font-bold text-blue-800">Total Pro-rated Charge: $<span id="total-prorated">0.00</span></p>
+                <p class="text-sm text-blue-600 mt-1">* Calculated as: (New Product Pro-rated Cost) - (Current Sub Remaining Value)</p>
+            </div>
+        </section>
+
+        <!-- Discount Calculator Section -->
+        <section class="card p-6">
+            <h2 class="text-xl font-semibold mb-4 text-slate-700">3. Discount Calculator</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                    <h3 class="font-medium">Scenario A: Price from Discount %</h3>
+                    <div class="flex gap-4">
+                        <input type="number" id="disc-a-list" class="input-field" placeholder="List Price ($)">
+                        <input type="number" id="disc-a-pct" class="input-field" placeholder="Discount %">
+                    </div>
+                    <p class="font-bold text-green-600">Discounted Price: $<span id="disc-a-result">0.00</span></p>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-medium">Scenario B: Discount % from Price</h3>
+                    <div class="flex gap-4">
+                        <input type="number" id="disc-b-list" class="input-field" placeholder="List Price ($)">
+                        <input type="number" id="disc-b-final" class="input-field" placeholder="Discounted Price ($)">
+                    </div>
+                    <p class="font-bold text-green-600">Discount Percentage: <span id="disc-b-result">0</span>%</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <div class="flex justify-center">
+            <button onclick="generateExport()" class="bg-green-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:bg-green-700 transition">Generate Gmail Export Document</button>
+        </div>
+
+        <div id="export-container" class="hidden card p-8 border-2 border-green-200">
+            <h2 class="text-xl font-bold mb-4">Draft for Gmail</h2>
+            <div id="export-content" class="bg-white p-4 border whitespace-pre-wrap font-sans text-slate-700"></div>
+            <button onclick="copyExport()" class="mt-4 btn-primary">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        function addRow() {
+            const tbody = document.getElementById('product-table-body');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="p-2 border"><input type="text" class="input-field prod-name" placeholder="Product Name"></td>
+                <td class="p-2 border"><input type="number" class="input-field prod-lic" placeholder="0" oninput="calculate()"></td>
+                <td class="p-2 border"><input type="number" class="input-field prod-price" placeholder="0.00" oninput="calculate()"></td>
+                <td class="p-2 border"><input type="date" class="input-field prod-start" onchange="calculate()"></td>
+                <td class="p-2 border text-center"><button onclick="this.parentElement.parentElement.remove(); calculate();" class="text-red-600 font-bold">X</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function calculate() {
+            // Pro-ration logic
+            const currCost = parseFloat(document.getElementById('curr-cost').value) || 0;
+            const currStart = new Date(document.getElementById('curr-start').value);
+            const currEnd = new Date(document.getElementById('curr-end').value);
+            
+            let remainingValue = 0;
+            if (!isNaN(currStart) && !isNaN(currEnd)) {
+                const totalDays = (currEnd - currStart) / (1000 * 60 * 60 * 24);
+                const remainingDays = (currEnd - new Date()) / (1000 * 60 * 60 * 24);
+                if (remainingDays > 0) {
+                    remainingValue = (currCost / totalDays) * remainingDays;
+                }
+            }
+
+            let newTotal = 0;
+            document.querySelectorAll('#product-table-body tr').forEach(row => {
+                const price = parseFloat(row.querySelector('.prod-price').value) || 0;
+                const lic = parseFloat(row.querySelector('.prod-lic').value) || 1;
+                const start = new Date(row.querySelector('.prod-start').value);
+                
+                if (!isNaN(start) && !isNaN(currEnd)) {
+                    const daysRemaining = (currEnd - start) / (1000 * 60 * 60 * 24);
+                    if (daysRemaining > 0) {
+                        newTotal += (price * lic / 365) * daysRemaining;
+                    }
+                }
+            });
+
+            const finalCharge = Math.max(0, newTotal - remainingValue);
+            document.getElementById('total-prorated').innerText = finalCharge.toFixed(2);
+
+            // Discount logic
+            const daList = parseFloat(document.getElementById('disc-a-list').value) || 0;
+            const daPct = parseFloat(document.getElementById('disc-a-pct').value) || 0;
+            document.getElementById('disc-a-result').innerText = (daList * (1 - daPct/100)).toFixed(2);
+
+            const dbList = parseFloat(document.getElementById('disc-b-list').value) || 0;
+            const dbFinal = parseFloat(document.getElementById('disc-b-final').value) || 0;
+            if (dbList > 0) {
+                document.getElementById('disc-b-result').innerText = ((1 - dbFinal/dbList) * 100).toFixed(2);
+            }
+        }
+
+        function generateExport() {
+            calculate();
+            const container = document.getElementById('export-container');
+            const content = document.getElementById('export-content');
+            container.classList.remove('hidden');
+
+            const currName = document.getElementById('curr-name').value;
+            const finalCharge = document.getElementById('total-prorated').innerText;
+
+            let productsText = "";
+            document.querySelectorAll('#product-table-body tr').forEach(row => {
+                const name = row.querySelector('.prod-name').value;
+                const lic = row.querySelector('.prod-lic').value;
+                productsText += "- ${name}: ${lic} Licenses
+";
+            });
+
+            content.innerText = "Hi Team,
+
+Please find the pricing updates below:
+
+" +
+                "CURRENT ENTITLEMENTS:
+" +
+                "- ${currName}: ${document.getElementById('curr-licenses').value} Licenses
+
+" +
+                "CHANGES & NEW ENTITLEMENTS:
+" +
+                productsText + "
+" +
+                "TOTAL ADDITIONAL PRO-RATED CHARGE: $${finalCharge}
+
+" +
+                "Please let me know if you have any questions.
+
+Best regards,";
+        }
+
+        function copyExport() {
+            const text = document.getElementById('export-content').innerText;
+            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+        }
+
+        // Initialize with one row
+        addRow();
+        // Set today's date as default for start dates
+        document.getElementById('curr-start').valueAsDate = new Date();
+    </script>
+</body>
+</html>
