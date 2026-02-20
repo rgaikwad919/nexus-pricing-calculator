@@ -63,11 +63,10 @@
                         </tr>
                     </thead>
                     <tbody id="product-table-body">
-                        <!-- Rows added dynamically -->
                     </tbody>
                 </table>
             </div>
-            <div class="mt-4 p-4 bg-blue-50 border border-blue-100 rounded">
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
                 <p class="text-lg font-bold text-blue-800">Total Pro-rated Charge: $<span id="total-prorated">0.00</span></p>
                 <p class="text-sm text-blue-600 mt-1">* Calculated as: (New Product Pro-rated Cost) - (Current Sub Remaining Value)</p>
             </div>
@@ -98,7 +97,7 @@
 
         <!-- Export Section -->
         <div class="flex justify-center">
-            <button onclick="generateExport()" class="bg-green-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg hover:bg-green-700 transition">Generate Gmail Export Document</button>
+            <button onclick="generateExport()" class="bg-green-600 text-white px-8 py-3 rounded-lg font-bold shadow-lg">Generate Gmail Export Document</button>
         </div>
 
         <div id="export-container" class="hidden card p-8 border-2 border-green-200">
@@ -110,55 +109,48 @@
 
     <script>
         function addRow() {
-            const tbody = document.getElementById('product-table-body');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="p-2 border"><input type="text" class="input-field prod-name" placeholder="Product Name"></td>
-                <td class="p-2 border"><input type="number" class="input-field prod-lic" placeholder="0" oninput="calculate()"></td>
-                <td class="p-2 border"><input type="number" class="input-field prod-price" placeholder="0.00" oninput="calculate()"></td>
-                <td class="p-2 border"><input type="date" class="input-field prod-start" onchange="calculate()"></td>
-                <td class="p-2 border text-center"><button onclick="this.parentElement.parentElement.remove(); calculate();" class="text-red-600 font-bold">X</button></td>
-            `;
+            var tbody = document.getElementById('product-table-body');
+            var row = document.createElement('tr');
+            row.innerHTML =
+                '<td class="p-2 border"><input type="text" class="input-field prod-name" placeholder="Product Name"></td>' +
+                '<td class="p-2 border"><input type="number" class="input-field prod-lic" placeholder="0" oninput="calculate()"></td>' +
+                '<td class="p-2 border"><input type="number" class="input-field prod-price" placeholder="0.00" oninput="calculate()"></td>' +
+                '<td class="p-2 border"><input type="date" class="input-field prod-start" onchange="calculate()"></td>' +
+                '<td class="p-2 border text-center"><button onclick="this.parentElement.parentElement.remove(); calculate();" class="text-red-600 font-bold">X</button></td>';
             tbody.appendChild(row);
         }
 
         function calculate() {
-            const currCost = parseFloat(document.getElementById('curr-cost').value) || 0;
-            const currStart = new Date(document.getElementById('curr-start').value);
-            const currEnd = new Date(document.getElementById('curr-end').value);
-            
-            let remainingValue = 0;
+            var currCost = parseFloat(document.getElementById('curr-cost').value) || 0;
+            var currStart = new Date(document.getElementById('curr-start').value);
+            var currEnd = new Date(document.getElementById('curr-end').value);
+            var remainingValue = 0;
             if (!isNaN(currStart) && !isNaN(currEnd)) {
-                const totalDays = (currEnd - currStart) / (1000 * 60 * 60 * 24);
-                const remainingDays = (currEnd - new Date()) / (1000 * 60 * 60 * 24);
+                var totalDays = (currEnd - currStart) / (1000 * 60 * 60 * 24);
+                var remainingDays = (currEnd - new Date()) / (1000 * 60 * 60 * 24);
                 if (remainingDays > 0) {
                     remainingValue = (currCost / totalDays) * remainingDays;
                 }
             }
-
-            let newTotal = 0;
-            document.querySelectorAll('#product-table-body tr').forEach(row => {
-                const price = parseFloat(row.querySelector('.prod-price').value) || 0;
-                const lic = parseFloat(row.querySelector('.prod-lic').value) || 1;
-                const start = new Date(row.querySelector('.prod-start').value);
-                
+            var newTotal = 0;
+            document.querySelectorAll('#product-table-body tr').forEach(function(row) {
+                var price = parseFloat(row.querySelector('.prod-price').value) || 0;
+                var lic = parseFloat(row.querySelector('.prod-lic').value) || 1;
+                var start = new Date(row.querySelector('.prod-start').value);
                 if (!isNaN(start) && !isNaN(currEnd)) {
-                    const daysRemaining = (currEnd - start) / (1000 * 60 * 60 * 24);
+                    var daysRemaining = (currEnd - start) / (1000 * 60 * 60 * 24);
                     if (daysRemaining > 0) {
                         newTotal += (price * lic / 365) * daysRemaining;
                     }
                 }
             });
-
-            const finalCharge = Math.max(0, newTotal - remainingValue);
+            var finalCharge = Math.max(0, newTotal - remainingValue);
             document.getElementById('total-prorated').innerText = finalCharge.toFixed(2);
-
-            const daList = parseFloat(document.getElementById('disc-a-list').value) || 0;
-            const daPct = parseFloat(document.getElementById('disc-a-pct').value) || 0;
+            var daList = parseFloat(document.getElementById('disc-a-list').value) || 0;
+            var daPct = parseFloat(document.getElementById('disc-a-pct').value) || 0;
             document.getElementById('disc-a-result').innerText = (daList * (1 - daPct/100)).toFixed(2);
-
-            const dbList = parseFloat(document.getElementById('disc-b-list').value) || 0;
-            const dbFinal = parseFloat(document.getElementById('disc-b-final').value) || 0;
+            var dbList = parseFloat(document.getElementById('disc-b-list').value) || 0;
+            var dbFinal = parseFloat(document.getElementById('disc-b-final').value) || 0;
             if (dbList > 0) {
                 document.getElementById('disc-b-result').innerText = ((1 - dbFinal/dbList) * 100).toFixed(2);
             }
@@ -166,49 +158,25 @@
 
         function generateExport() {
             calculate();
-            const container = document.getElementById('export-container');
-            const content = document.getElementById('export-content');
+            var container = document.getElementById('export-container');
+            var content = document.getElementById('export-content');
             container.classList.remove('hidden');
-
-            const currName = document.getElementById('curr-name').value;
-            const finalCharge = document.getElementById('total-prorated').innerText;
-
-            let productsText = "";
-            document.querySelectorAll('#product-table-body tr').forEach(row => {
-                const name = row.querySelector('.prod-name').value;
-                const lic = row.querySelector('.prod-lic').value;
-                productsText += "- " + name + ": " + lic + " Licenses
-";
+            var currName = document.getElementById('curr-name').value;
+            var finalCharge = document.getElementById('total-prorated').innerText;
+            var productsText = '';
+            document.querySelectorAll('#product-table-body tr').forEach(function(row) {
+                var name = row.querySelector('.prod-name').value;
+                var lic = row.querySelector('.prod-lic').value;
+                productsText += '- ' + name + ': ' + lic + ' Licenses\n';
             });
-
-            content.innerText = "Hi Team,
-
-Please find the pricing updates below:
-
-" +
-                "CURRENT ENTITLEMENTS:
-" +
-                "- " + currName + ": " + document.getElementById('curr-licenses').value + " Licenses
-
-" +
-                "CHANGES & NEW ENTITLEMENTS:
-" +
-                productsText + "
-" +
-                "TOTAL ADDITIONAL PRO-RATED CHARGE: $" + finalCharge + "
-
-" +
-                "Please let me know if you have any questions.
-
-Best regards,";
+            content.innerText = 'Hi Team,\n\nPlease find the pricing updates below:\n\nCURRENT ENTITLEMENTS:\n- ' + currName + ': ' + document.getElementById('curr-licenses').value + ' Licenses\n\nCHANGES & NEW ENTITLEMENTS:\n' + productsText + '\nTOTAL ADDITIONAL PRO-RATED CHARGE: $' + finalCharge + '\n\nPlease let me know if you have any questions.\n\nBest regards,';
         }
 
         function copyExport() {
-            const text = document.getElementById('export-content').innerText;
-            navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
+            var text = document.getElementById('export-content').innerText;
+            navigator.clipboard.writeText(text).then(function() { alert('Copied to clipboard!'); });
         }
 
-        addRow();
         document.getElementById('curr-start').valueAsDate = new Date();
     </script>
 </body>
