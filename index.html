@@ -123,7 +123,6 @@
         }
 
         function calculate() {
-            // Pro-ration logic
             const currCost = parseFloat(document.getElementById('curr-cost').value) || 0;
             const currStart = new Date(document.getElementById('curr-start').value);
             const currEnd = new Date(document.getElementById('curr-end').value);
@@ -154,7 +153,6 @@
             const finalCharge = Math.max(0, newTotal - remainingValue);
             document.getElementById('total-prorated').innerText = finalCharge.toFixed(2);
 
-            // Discount logic
             const daList = parseFloat(document.getElementById('disc-a-list').value) || 0;
             const daPct = parseFloat(document.getElementById('disc-a-pct').value) || 0;
             document.getElementById('disc-a-result').innerText = (daList * (1 - daPct/100)).toFixed(2);
@@ -179,7 +177,7 @@
             document.querySelectorAll('#product-table-body tr').forEach(row => {
                 const name = row.querySelector('.prod-name').value;
                 const lic = row.querySelector('.prod-lic').value;
-                productsText += "- ${name}: ${lic} Licenses
+                productsText += "- " + name + ": " + lic + " Licenses
 ";
             });
 
@@ -190,14 +188,14 @@ Please find the pricing updates below:
 " +
                 "CURRENT ENTITLEMENTS:
 " +
-                "- ${currName}: ${document.getElementById('curr-licenses').value} Licenses
+                "- " + currName + ": " + document.getElementById('curr-licenses').value + " Licenses
 
 " +
                 "CHANGES & NEW ENTITLEMENTS:
 " +
                 productsText + "
 " +
-                "TOTAL ADDITIONAL PRO-RATED CHARGE: $${finalCharge}
+                "TOTAL ADDITIONAL PRO-RATED CHARGE: $" + finalCharge + "
 
 " +
                 "Please let me know if you have any questions.
@@ -210,9 +208,7 @@ Best regards,";
             navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard!"));
         }
 
-        // Initialize with one row
         addRow();
-        // Set today's date as default for start dates
         document.getElementById('curr-start').valueAsDate = new Date();
     </script>
 </body>
