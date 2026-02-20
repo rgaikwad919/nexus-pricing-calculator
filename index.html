@@ -119,20 +119,27 @@
     </div>
 
     <script>
-        var today = new Date().toISOString().split('T')[0];
+        var todayStr = new Date().toISOString().split('T')[0];
 
-        function addRow(type) {
+        function addRow(type, mockData) {
             var tbody = document.getElementById(type + '-table-body');
             var row = document.createElement('tr');
             var isCurrent = (type === 'current');
             
             row.className = isCurrent ? 'current-item' : 'new-item';
+            
+            var nameVal = mockData ? mockData.name : '';
+            var licVal = mockData ? mockData.lic : 1;
+            var priceVal = mockData ? mockData.price : '';
+            var startVal = mockData ? mockData.start : todayStr;
+            var endVal = mockData ? mockData.end : '';
+            
             row.innerHTML = 
-                '<td class="p-2 border"><input type="text" class="input-field name" placeholder="Item Name" oninput="calculateAll()"></td>' +
-                '<td class="p-2 border"><input type="number" class="input-field lic" value="1" oninput="calculateAll()"></td>' +
-                '<td class="p-2 border"><input type="number" class="input-field price" placeholder="0.00" oninput="calculateAll()"></td>' +
-                '<td class="p-2 border"><input type="date" class="input-field start" value="' + today + '" oninput="calculateAll()"></td>' +
-                '<td class="p-2 border"><input type="date" class="input-field end" oninput="calculateAll()"></td>' +
+                '<td class="p-2 border"><input type="text" class="input-field name" value="' + nameVal + '" oninput="calculateAll()"></td>' +
+                '<td class="p-2 border"><input type="number" class="input-field lic" value="' + licVal + '" oninput="calculateAll()"></td>' +
+                '<td class="p-2 border"><input type="number" class="input-field price" value="' + priceVal + '" placeholder="0.00" oninput="calculateAll()"></td>' +
+                '<td class="p-2 border"><input type="date" class="input-field start" value="' + startVal + '" oninput="calculateAll()"></td>' +
+                '<td class="p-2 border"><input type="date" class="input-field end" value="' + endVal + '" oninput="calculateAll()"></td>' +
                 '<td class="p-2 border text-center"><button onclick="this.parentElement.parentElement.remove(); calculateAll();" class="text-red-500 font-bold hover:text-red-700">X</button></td>';
             
             tbody.appendChild(row);
@@ -144,13 +151,12 @@
             var now = new Date();
             now.setHours(0,0,0,0);
 
-            // Calculate Current Subscriptions Remaining Value
             document.querySelectorAll('.current-item').forEach(function(row) {
                 var cost = parseFloat(row.querySelector('.price').value) || 0;
                 var start = new Date(row.querySelector('.start').value);
                 var end = new Date(row.querySelector('.end').value);
 
-                if (!isNaN(start) && !isNaN(end) && end > start) {
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
                     var totalDays = (end - start) / (1000 * 60 * 60 * 24);
                     var remainingDays = (end - now) / (1000 * 60 * 60 * 24);
                     if (remainingDays > 0) {
@@ -160,7 +166,6 @@
             });
             document.getElementById('total-remaining-value').innerText = totalRemainingValue.toFixed(2);
 
-            // Calculate New Entitlements Pro-rated Cost
             var newTotalProrated = 0;
             document.querySelectorAll('.new-item').forEach(function(row) {
                 var annualPrice = parseFloat(row.querySelector('.price').value) || 0;
@@ -168,10 +173,9 @@
                 var start = new Date(row.querySelector('.start').value);
                 var end = new Date(row.querySelector('.end').value);
 
-                if (!isNaN(start) && !isNaN(end) && end > start) {
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
                     var daysRemaining = (end - start) / (1000 * 60 * 60 * 24);
                     if (daysRemaining > 0) {
-                        // Formula: (Annual Price * Licenses / 365) * Days Remaining
                         newTotalProrated += (annualPrice * lic / 365) * daysRemaining;
                     }
                 }
@@ -247,9 +251,18 @@ Best regards,";
             navigator.clipboard.writeText(text).then(function() { alert('Copied to clipboard!'); });
         }
 
-        // Initialize with one row each
-        addRow('current');
-        addRow('new');
+        var oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+        var endStr = oneYearFromNow.toISOString().split('T')[0];
+
+        addRow('current', { name: 'Legacy Plan', lic: 10, price: 1000, start: '2025-01-01', end: endStr });
+        addRow('new', { name: 'Premium Upgrade', lic: 15, price: 2000, start: todayStr, end: endStr });
+
+        document.getElementById('disc-a-list').value = 5000;
+        document.getElementById('disc-a-pct').value = 25;
+        document.getElementById('disc-b-list').value = 5000;
+        document.getElementById('disc-b-final').value = 3750;
+        calculateDiscounts();
     </script>
 </body>
 </html>
